@@ -2,7 +2,6 @@
   <div class="page">
 
     <nav class="navbar">
-      <router-link to="/" class="nav-link">Home</router-link>
       <router-link to="/doctor/login" class="nav-link">Login</router-link>
     </nav>
 

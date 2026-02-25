@@ -1,21 +1,15 @@
 <template>
   <div class="page">
-
-    <!-- Top Navigation -->
     <nav class="navbar">
-      <router-link to="/" class="nav-link">Home</router-link>
-      <router-link to="/doctor/register" class="nav-link">Sign-Up</router-link>
     </nav>
 
-    <!-- Welcome Section -->
     <section class="hero">
       <h1>Welcome to U-Health</h1>
       <p>Manage patients, treatments and appointments digitally and efficiently.</p>
     </section>
 
-    <!-- Login Section -->
     <section class="login-section">
-      <h2>Doctor Login</h2>
+      <h2>Doctor Sign-In</h2>
 
       <form @submit.prevent="login">
         <div class="form-group">
@@ -28,28 +22,15 @@
           <input v-model="password" type="password" required />
         </div>
 
-        <!-- Forgot Password -->
         <div class="forgot-password">
           <router-link to="/doctor/reset-password">
             Forgot password?
           </router-link>
         </div>
 
-        <button type="submit">Login</button>
+        <button type="submit">Sign In</button>
       </form>
     </section>
-
-    <!-- Doctor Menu -->
-    <section class="doctor-menu">
-      <router-link to="/doctor/patients" class="menu-card">
-        Patient Management
-      </router-link>
-
-      <router-link to="/doctor/dashboard" class="menu-card">
-        Dashboard
-      </router-link>
-    </section>
-
   </div>
 </template>
 
@@ -62,6 +43,9 @@ const password = ref('')
 const router = useRouter()
 
 function login() {
+  // Mock auth: set a token so protected pages can validate access
+  localStorage.setItem('token', 'mock-doctor-token')
+
   router.push('/doctor/dashboard')
 }
 </script>
@@ -86,6 +70,10 @@ function login() {
   font-weight: 500;
 }
 
+.nav-link:hover {
+  text-decoration: underline;
+}
+
 /* HERO */
 .hero {
   text-align: center;
@@ -95,10 +83,12 @@ function login() {
 .hero h1 {
   color: #1976d2;
   font-size: 36px;
+  margin-bottom: 10px;
 }
 
 .hero p {
   color: #555;
+  font-size: 16px;
 }
 
 /* LOGIN */
