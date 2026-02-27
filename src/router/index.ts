@@ -19,11 +19,11 @@ const router = createRouter({
     { path: '/doctor/reset-password', component: DoctorResetPassword },
     { path: '/doctor/dashboard', component: DoctorDashboard},
     {path: '/doctor/patients', component: DoctorPatients },
+    {path: '/doctor/patient-detail/:id', name: 'DoctorPatientDetail', component: DoctorPatientDetail, meta:{requiresAuth: true}  },
     {path: '/doctor/change-password', component: DoctorChangePassword },
     {path: '/doctor/bookings', component: DoctorBookings },
     {path: '/doctor/diseases', component: DoctorDiseases },
     {path: '/doctor/medications', component: DoctorMedications },
-    {path: '/doctor/patient-detail', component: DoctorPatientDetail },
     {path: '/doctor/treatments', component: DoctorTreatments }
   ],
 })

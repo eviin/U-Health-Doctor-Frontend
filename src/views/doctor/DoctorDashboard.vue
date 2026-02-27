@@ -5,6 +5,7 @@
       <div class="nav-left">
         <router-link to="/doctor/dashboard" class="nav-link">Dashboard</router-link>
         <router-link to="/doctor/patients" class="nav-link">Patients</router-link>
+          <router-link to="/doctor/bookings" class="nav-link">Bookings</router-link>
         <router-link to="/doctor/diseases" class="nav-link">Diseases</router-link>
         <router-link to="/doctor/medications" class="nav-link">Medications</router-link>
         <router-link to="/doctor/treatments" class="nav-link">Treatments</router-link>

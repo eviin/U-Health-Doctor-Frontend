@@ -1,95 +1,95 @@
 <template>
   <div class="page">
-
+    <!-- Navigation -->
     <nav class="navbar">
       <router-link to="/doctor/dashboard" class="nav-link">Dashboard</router-link>
       <router-link to="/doctor/patients" class="nav-link">Patients</router-link>
+      <router-link to="/doctor/bookings" class="nav-link">Bookings</router-link>
+      <router-link to="/doctor/diseases" class="nav-link">Diseases</router-link>
+      <router-link to="/doctor/medications" class="nav-link">Medications</router-link>
+      <router-link to="/doctor/treatments" class="nav-link">Treatments</router-link>
     </nav>
 
     <section class="hero">
-      <h1>Patient Information</h1>
-      <p>View and manage patient treatment records.</p>
+      <h1>Patient Details</h1>
+      <p>View patient information.</p>
     </section>
 
     <section class="card">
+      <p v-if="loading" class="muted">Loading...</p>
+      <p v-else-if="error" class="error">{{ error }}</p>
 
-      <!-- Patient Info -->
-      <h2>Patient Details</h2>
-      <div class="patient-info">
-        <p><strong>Name:</strong> Anna Müller</p>
-        <p><strong>Date of Birth:</strong> 01.01.1999</p>
-        <p><strong>Email:</strong> anna.müller@gmail.com</p>
-        <p><strong>Insurance Number:</strong> A1234567</p>
+      <div v-else>
+        <div class="row">
+          <span class="label">Name</span>
+          <span class="value">{{ fullName }}</span>
+        </div>
+
+        <div class="row" v-if="patientEmail">
+          <span class="label">Email</span>
+          <span class="value">{{ patientEmail }}</span>
+        </div>
+
+        <div class="row" v-if="patientId">
+          <span class="label">Patient ID</span>
+          <span class="value">{{ patientId }}</span>
+        </div>
+
+        <div class="actions">
+          <router-link to="/doctor/patients" class="back-link">← Back to Patients</router-link>
+        </div>
       </div>
-
-      <hr />
-
-      <!-- Treatment Record Management -->
-      <h2>Treatment Records</h2>
-
-      <div class="form-row">
-        <input v-model="newTreatment" placeholder="Treatment description" />
-        <input v-model="newDate" type="date" />
-        <button @click="addTreatment">Add</button>
-      </div>
-
-      <table>
-        <thead>
-        <tr>
-          <th>Date</th>
-          <th>Description</th>
-          <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="t in treatments" :key="t.id">
-          <td>{{ t.date }}</td>
-          <td>{{ t.description }}</td>
-          <td>
-            <button @click="removeTreatment(t.id)">Delete</button>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-
     </section>
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import api from '@/services/api'
 
-interface Treatment {
-  id: number
-  date: string
-  description: string
+type Patient = {
+  id?: number | string
+  first_name?: string
+  last_name?: string
+  name?: string
+  email?: string
 }
 
-const treatments = ref<Treatment[]>([
-  { id: 1, date: '2026-02-20', description: 'Routine check-up' },
-  { id: 2, date: '2026-02-22', description: 'Blood pressure monitoring' }
-])
+const route = useRoute()
 
-const newTreatment = ref('')
-const newDate = ref('')
+const loading = ref(true)
+const error = ref('')
+const patient = ref<Patient | null>(null)
 
-function addTreatment() {
-  if (!newTreatment.value || !newDate.value) return
+const patientId = computed(() => patient.value?.id ?? '')
+const patientEmail = computed(() => patient.value?.email ?? '')
 
-  treatments.value.push({
-    id: Date.now(),
-    date: newDate.value,
-    description: newTreatment.value
-  })
+const fullName = computed(() => {
+  if (!patient.value) return ''
+  if (patient.value.name) return patient.value.name
 
-  newTreatment.value = ''
-  newDate.value = ''
-}
+  const first = patient.value.first_name ?? ''
+  const last = patient.value.last_name ?? ''
+  return `${first} ${last}`.trim()
+})
 
-function removeTreatment(id: number) {
-  treatments.value = treatments.value.filter(t => t.id !== id)
-}
+onMounted(async () => {
+  try {
+    error.value = ''
+    loading.value = true
+
+    const id = route.params.id
+    const res = await api.get(`/patients/${id}`)
+
+    patient.value = res.data?.data ?? res.data
+  } catch (e: any) {
+    console.error('PATIENT DETAIL ERROR:', e?.response?.status, e?.response?.data)
+    error.value = 'Could not load patient details.'
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <style scoped>
@@ -99,6 +99,7 @@ function removeTreatment(id: number) {
   min-height: 100vh;
 }
 
+/* NAVBAR */
 .navbar {
   padding: 15px 40px;
   border-bottom: 1px solid #eee;
@@ -111,6 +112,11 @@ function removeTreatment(id: number) {
   font-weight: 500;
 }
 
+.nav-link:hover {
+  text-decoration: underline;
+}
+
+/* HERO */
 .hero {
   text-align: center;
   padding: 60px 20px 30px;
@@ -118,42 +124,60 @@ function removeTreatment(id: number) {
 
 .hero h1 {
   color: #1976d2;
+  font-size: 34px;
 }
 
+.hero p {
+  color: #555;
+}
+
+/* CARD */
 .card {
-  max-width: 900px;
+  max-width: 700px;
   margin: 20px auto 40px;
   padding: 20px;
   border-radius: 8px;
+  background: white;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
-.patient-info p {
-  margin: 6px 0;
-}
-
-.form-row input {
-  margin-right: 8px;
-  margin-bottom: 10px;
-  padding: 6px;
-}
-
-button {
-  padding: 6px 10px;
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 8px;
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
   border-bottom: 1px solid #eee;
+}
+
+.label {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.value {
+  color: #333;
+}
+
+.actions {
+  margin-top: 16px;
+}
+
+.back-link {
+  color: #1976d2;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.muted {
+  color: #777;
+  text-align: center;
+  padding: 12px;
+}
+
+.error {
+  color: #c62828;
+  text-align: center;
 }
 </style>

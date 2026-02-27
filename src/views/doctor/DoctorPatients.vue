@@ -18,13 +18,32 @@
 
     <!-- Content Card -->
     <section class="card">
-
       <!-- Create -->
       <div class="create-section">
         <input v-model="newPatient.first_name" placeholder="First name" />
         <input v-model="newPatient.last_name" placeholder="Last name" />
+
+        <input
+          v-model.number="newPatient.user_id"
+          type="number"
+          min="1"
+          placeholder="User ID"
+        />
+
+        <input
+          v-model.number="newPatient.age"
+          type="number"
+          min="0"
+          placeholder="Age"
+        />
+
+        <input v-model="newPatient.sex" placeholder="Sex (e.g. male/female)" />
+        <input v-model="newPatient.location" placeholder="Location" />
+
         <button @click="addPatient">Add</button>
       </div>
+
+      <p v-if="error" class="error">{{ error }}</p>
 
       <!-- Search -->
       <div class="search-section">
@@ -41,10 +60,10 @@
         </thead>
 
         <tbody>
-        <tr v-for="patient in filteredPatients" :key="patient.id">
+        <tr v-for="patient in filteredPatients" :key="patient.id ?? patient.user_id">
           <td>{{ patient.first_name }} {{ patient.last_name }}</td>
           <td>
-            <router-link to="/doctor/patient-detail">View</router-link>
+            <router-link :to="`/doctor/patient-detail/${patient.id}`">View</router-link>
             |
             <button class="danger-btn" @click="removePatient(patient.id)">Delete</button>
           </td>
@@ -72,31 +91,39 @@ function logout() {
 }
 
 type Patient = {
-  id: number | string
+  id?: number | string
   first_name?: string
   last_name?: string
-  name?: string
-  email?: string
+  user_id?: number
+  age?: number
+  sex?: string
+  location?: string
 }
 
 const patients = ref<Patient[]>([])
 const search = ref('')
+const error = ref('')
 
 const newPatient = ref({
+  user_id: 1,
   first_name: '',
   last_name: '',
-  email: ''
+  age: 0,
+  sex: '',
+  location: ''
 })
 
-
-onMounted(async () => {
+async function fetchPatients() {
   try {
-    const res = await api.get('/admin/patients')
+    const res = await api.get('/patients')
     patients.value = Array.isArray(res.data) ? res.data : (res.data.data ?? [])
-    console.log('REAL PATIENTS:', patients.value)
   } catch (e: any) {
     console.error('PATIENTS ERROR:', e?.response?.status, e?.response?.data)
   }
+}
+
+onMounted(async () => {
+  await fetchPatients()
 })
 
 const filteredPatients = computed(() => {
@@ -105,34 +132,67 @@ const filteredPatients = computed(() => {
 
   return patients.value.filter((p) => {
     const fullName = `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim().toLowerCase()
-    const name = (p.name ?? '').toLowerCase()
-    const email = (p.email ?? '').toLowerCase()
-    return fullName.includes(q) || name.includes(q) || email.includes(q)
+    const loc = `${p.location ?? ''}`.toLowerCase()
+    return fullName.includes(q) || loc.includes(q)
   })
 })
 
+async function addPatient() {
+  try {
+    error.value = ''
 
-function addPatient() {
-  const first = newPatient.value.first_name.trim()
-  const last = newPatient.value.last_name.trim()
-  const email = newPatient.value.email.trim()
+    const payload = {
+      user_id: Number(newPatient.value.user_id),
+      first_name: newPatient.value.first_name.trim(),
+      last_name: newPatient.value.last_name.trim(),
+      age: Number(newPatient.value.age),
+      sex: newPatient.value.sex.trim(),
+      location: newPatient.value.location.trim()
+    }
 
-  if (!first || !last) return
+    if (!payload.user_id || payload.user_id < 1) {
+      error.value = 'User ID is required.'
+      return
+    }
+    if (!payload.first_name || !payload.last_name) {
+      error.value = 'First name and last name are required.'
+      return
+    }
+    if (!payload.sex || !payload.location) {
+      error.value = 'Sex and location are required.'
+      return
+    }
 
-  patients.value.unshift({
-    id: Date.now(),
-    first_name: first,
-    last_name: last,
-    email
-  })
+    await api.post('/admin/patients', payload)
 
-  newPatient.value.first_name = ''
-  newPatient.value.last_name = ''
-  newPatient.value.email = ''
+    // reset inputs
+    newPatient.value.first_name = ''
+    newPatient.value.last_name = ''
+    newPatient.value.age = 0
+    newPatient.value.sex = ''
+    newPatient.value.location = ''
+
+    // reload list
+    await fetchPatients()
+  } catch (e: any) {
+    console.error('ADD PATIENT ERROR:', e?.response?.status, e?.response?.data)
+    const status = e?.response?.status
+    const msg = e?.response?.data?.message
+    error.value = status ? `Could not add patient (${status})${msg ? ': ' + msg : ''}` : 'Could not add patient.'
+  }
 }
 
-function removePatient(id: number | string) {
-  patients.value = patients.value.filter(p => p.id !== id)
+async function removePatient(id: number | string | undefined) {
+  if (id === undefined || id === null) return
+
+  try {
+    error.value = ''
+    await api.delete(`/patients/${id}`)
+    await fetchPatients()
+  } catch (e: any) {
+    console.error('DELETE PATIENT ERROR:', e?.response?.status, e?.response?.data)
+    error.value = 'Could not delete patient.'
+  }
 }
 </script>
 
@@ -182,7 +242,7 @@ function removePatient(id: number | string) {
   padding: 20px;
   border-radius: 8px;
   background: white;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* INPUTS */
@@ -262,5 +322,10 @@ tbody tr:hover {
   color: #777;
   text-align: center;
   padding: 12px;
+}
+
+.error {
+  color: #c62828;
+  margin: 10px 0 0;
 }
 </style>
