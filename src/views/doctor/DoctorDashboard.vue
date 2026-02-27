@@ -44,23 +44,22 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue'
+import api from '@/services/api'
 
-const router = useRouter()
+const patients = ref([])
 
-onMounted(() => {
-  const token = localStorage.getItem('token')
-  if (!token) {
-    router.push('/doctor/login')
+onMounted(async () => {
+  try {
+    const response = await api.get('/admin/patients')
+    console.log('PATIENTS:', response.data)
+    patients.value = response.data
+  } catch (e: any) {
+    console.error('ERROR:', e.response?.status)
   }
 })
-
-function logout() {
-  localStorage.removeItem('token')
-  router.push('/doctor/login')
-}
 </script>
+
 
 <style scoped>
 .page {

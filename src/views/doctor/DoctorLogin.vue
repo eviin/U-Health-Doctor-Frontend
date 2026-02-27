@@ -29,6 +29,7 @@
         </div>
 
         <button type="submit">Login</button>
+        <p v-if="error" class="error">{{ error }}</p>
       </form>
     </section>
   </div>
@@ -37,16 +38,29 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '@/services/api'
+
+const router = useRouter()
 
 const email = ref('')
 const password = ref('')
-const router = useRouter()
+const error = ref('')
 
-function login() {
-  // Mock auth: set a token so protected pages can validate access
-  localStorage.setItem('token', 'mock-doctor-token')
+async function login() {
+  try {
+    error.value = ''
+    const response = await api.post('/login', {
+      email: email.value,
+      password: password.value
+    })
 
-  router.push('/doctor/dashboard')
+    const token = response.data.token
+    localStorage.setItem('token', token)
+
+    router.push('/doctor/dashboard')
+  } catch (err: any) {
+    error.value = 'Login failed'
+  }
 }
 </script>
 

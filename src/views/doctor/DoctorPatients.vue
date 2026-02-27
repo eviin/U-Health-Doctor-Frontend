@@ -18,9 +18,11 @@
 
     <!-- Content Card -->
     <section class="card">
+
       <!-- Create -->
       <div class="create-section">
-        <input v-model="newPatient" placeholder="New patient name" />
+        <input v-model="newPatient.first_name" placeholder="First name" />
+        <input v-model="newPatient.last_name" placeholder="Last name" />
         <button @click="addPatient">Add</button>
       </div>
 
@@ -40,7 +42,7 @@
 
         <tbody>
         <tr v-for="patient in filteredPatients" :key="patient.id">
-          <td>{{ patient.name }}</td>
+          <td>{{ patient.first_name }} {{ patient.last_name }}</td>
           <td>
             <router-link to="/doctor/patient-detail">View</router-link>
             |
@@ -58,41 +60,80 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '@/services/api'
 
-interface Patient {
-  id: number
-  name: string
+const router = useRouter()
+
+function logout() {
+  localStorage.removeItem('token')
+  router.push('/doctor/login')
 }
 
-const patients = ref<Patient[]>([
-  { id: 1, name: 'Max Mustermann' },
-  { id: 2, name: 'Anna Schmidt' }
-])
+type Patient = {
+  id: number | string
+  first_name?: string
+  last_name?: string
+  name?: string
+  email?: string
+}
 
-const newPatient = ref('')
+const patients = ref<Patient[]>([])
 const search = ref('')
 
+const newPatient = ref({
+  first_name: '',
+  last_name: '',
+  email: ''
+})
+
+
+onMounted(async () => {
+  try {
+    const res = await api.get('/admin/patients')
+    patients.value = Array.isArray(res.data) ? res.data : (res.data.data ?? [])
+    console.log('REAL PATIENTS:', patients.value)
+  } catch (e: any) {
+    console.error('PATIENTS ERROR:', e?.response?.status, e?.response?.data)
+  }
+})
+
+const filteredPatients = computed(() => {
+  const q = search.value.trim().toLowerCase()
+  if (!q) return patients.value
+
+  return patients.value.filter((p) => {
+    const fullName = `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim().toLowerCase()
+    const name = (p.name ?? '').toLowerCase()
+    const email = (p.email ?? '').toLowerCase()
+    return fullName.includes(q) || name.includes(q) || email.includes(q)
+  })
+})
+
+
 function addPatient() {
-  if (!newPatient.value.trim()) return
+  const first = newPatient.value.first_name.trim()
+  const last = newPatient.value.last_name.trim()
+  const email = newPatient.value.email.trim()
+
+  if (!first || !last) return
 
   patients.value.unshift({
     id: Date.now(),
-    name: newPatient.value.trim()
+    first_name: first,
+    last_name: last,
+    email
   })
 
-  newPatient.value = ''
+  newPatient.value.first_name = ''
+  newPatient.value.last_name = ''
+  newPatient.value.email = ''
 }
 
-function removePatient(id: number) {
+function removePatient(id: number | string) {
   patients.value = patients.value.filter(p => p.id !== id)
 }
-
-const filteredPatients = computed(() =>
-  patients.value.filter(p =>
-    p.name.toLowerCase().includes(search.value.toLowerCase())
-  )
-)
 </script>
 
 <style scoped>
