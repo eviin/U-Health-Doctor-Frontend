@@ -1,19 +1,17 @@
 <template>
   <div class="page">
     <nav class="navbar">
-      <router-link to="/doctor/dashboard" class="nav-link">Back to Dashboard</router-link>
+      <router-link to="/doctor/login" class="nav-link">Back to Login</router-link>
     </nav>
 
     <section class="hero">
-      <h1>Change Password</h1>
-      <p>Update your password securely.</p>
+      <h1>Forgot Password</h1>
+      <p>Enter your email and we will send you a reset link.</p>
     </section>
 
     <section class="card">
-      <input v-model="currentPassword" type="password" placeholder="Current password" />
-      <input v-model="newPassword" type="password" placeholder="New password" />
-
-      <button @click="changePassword">Change password</button>
+      <input v-model="email" type="email" placeholder="Email" />
+      <button @click="sendLink">Send reset link</button>
 
       <p v-if="message" class="success">{{ message }}</p>
       <p v-if="error" class="error">{{ error }}</p>
@@ -25,28 +23,20 @@
 import { ref } from 'vue'
 import api from '@/services/api'
 
-const currentPassword = ref('')
-const newPassword = ref('')
+const email = ref('')
 const message = ref('')
 const error = ref('')
 
-async function changePassword() {
+async function sendLink() {
   try {
     message.value = ''
     error.value = ''
 
-    const payload = {
-      current_password: currentPassword.value,
-      password: newPassword.value
-    }
-
-    await api.post('/change-password', payload)
-    message.value = 'Password updated.'
-    currentPassword.value = ''
-    newPassword.value = ''
+    await api.post('/forgot-password', { email: email.value.trim() })
+    message.value = 'Reset link sent. Please check your email.'
   } catch (e: any) {
     const msg = e?.response?.data?.message
-    error.value = msg ? String(msg) : 'Could not change password.'
+    error.value = msg ? String(msg) : 'Could not send reset link.'
   }
 }
 </script>

@@ -1,36 +1,35 @@
 <template>
   <div class="page">
-    <nav class="navbar">
-    </nav>
-
     <section class="hero">
       <h1>Welcome to U-Health</h1>
-      <p>Manage patients, treatments and appointments digitally and efficiently.</p>
+      <p>Doctor Access Portal</p>
     </section>
 
-    <section class="login-section">
-      <h2>Doctor Login</h2>
+    <section class="card">
+      <h2>Sign In</h2>
 
-      <form @submit.prevent="login">
-        <div class="form-group">
-          <label>Email</label>
-          <input v-model="email" type="email" required />
-        </div>
+      <input
+          v-model="email"
+          type="email"
+          placeholder="Email"
+      />
 
-        <div class="form-group">
-          <label>Password</label>
-          <input v-model="password" type="password" required />
-        </div>
+      <input
+          v-model="password"
+          type="password"
+          placeholder="Password"
+      />
 
-        <div class="forgot-password">
-          <router-link to="/doctor/reset-password">
-            Forgot password?
-          </router-link>
-        </div>
+      <router-link
+          to="/doctor/forgot-password"
+          class="forgot-link"
+      >
+        Forgot password?
+      </router-link>
 
-        <button type="submit">Login</button>
-        <p v-if="error" class="error">{{ error }}</p>
-      </form>
+      <button @click="login">Login</button>
+
+      <p v-if="error" class="error">{{ error }}</p>
     </section>
   </div>
 </template>
@@ -49,17 +48,26 @@ const error = ref('')
 async function login() {
   try {
     error.value = ''
-    const response = await api.post('/login', {
-      email: email.value,
+
+    const res = await api.post('/login', {
+      email: email.value.trim(),
       password: password.value
     })
 
-    const token = response.data.token
+    // Token speichern
+    const token = res.data?.token
+    if (!token) {
+      error.value = 'Login failed.'
+      return
+    }
+
     localStorage.setItem('token', token)
 
+    // Weiterleitung zum Dashboard
     router.push('/doctor/dashboard')
-  } catch (err: any) {
-    error.value = 'Login failed'
+  } catch (e: any) {
+    const msg = e?.response?.data?.message
+    error.value = msg ? String(msg) : 'Invalid credentials.'
   }
 }
 </script>
@@ -69,114 +77,80 @@ async function login() {
   font-family: Arial, sans-serif;
   background: white;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-/* NAVBAR */
-.navbar {
-  padding: 15px 40px;
-  border-bottom: 1px solid #eee;
-}
-
-.nav-link {
-  margin-right: 20px;
-  text-decoration: none;
-  color: #1976d2;
-  font-weight: 500;
-}
-
-.nav-link:hover {
-  text-decoration: underline;
-}
-
-/* HERO */
 .hero {
   text-align: center;
-  padding: 60px 20px 40px;
+  margin-bottom: 30px;
 }
 
 .hero h1 {
   color: #1976d2;
   font-size: 36px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .hero p {
   color: #555;
-  font-size: 16px;
 }
 
-/* LOGIN */
-.login-section {
-  max-width: 400px;
-  margin: 30px auto;
-  padding: 20px;
-  border: 1px solid #eee;
+.card {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 30px;
   border-radius: 8px;
+  background: white;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
 }
 
-.login-section h2 {
-  text-align: center;
+.card h2 {
   margin-bottom: 20px;
   color: #1976d2;
-}
-
-.form-group {
-  margin-bottom: 15px;
+  text-align: center;
 }
 
 input {
-  width: 100%;
-  padding: 8px;
+  padding: 10px;
   border-radius: 6px;
   border: 1px solid #ccc;
+  margin-bottom: 12px;
 }
 
 button {
-  width: 100%;
   padding: 10px;
   background-color: #1976d2;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  transition: 0.2s;
+  margin-top: 10px;
 }
 
-.forgot-password {
-  text-align: right;
-  margin-bottom: 15px;
+button:hover {
+  background-color: #145ea8;
 }
 
-.forgot-password a {
+.forgot-link {
   font-size: 14px;
   color: #1976d2;
   text-decoration: none;
+  margin-bottom: 10px;
+  text-align: right;
 }
 
-/* DOCTOR MENU */
-.doctor-menu {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin: 50px 0;
+.forgot-link:hover {
+  text-decoration: underline;
 }
 
-.menu-card {
-  padding: 20px 30px;
-  border: 1px solid #1976d2;
-  border-radius: 8px;
-  text-decoration: none;
-  color: #1976d2;
-  font-weight: 500;
-  transition: 0.2s;
-}
-
-.menu-card:hover {
-  background: #1976d2;
-  color: white;
+.error {
+  color: #c62828;
+  margin-top: 12px;
+  text-align: center;
 }
 </style>
-
-
-
-
-

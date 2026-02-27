@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import DoctorLogin from '@/views/doctor/DoctorLogin.vue'
+import DoctorForgotPassword from "@/views/doctor/DoctorForgotPassword.vue";
 import DoctorResetPassword from '@/views/doctor/DoctorResetPassword.vue'
 import DoctorDashboard from "@/views/doctor/DoctorDashboard.vue";
 import DoctorPatients from "@/views/doctor/DoctorPatients.vue";
@@ -16,11 +17,17 @@ const router = createRouter({
   routes: [
     { path: '/', redirect: '/doctor/login' },
     { path: '/doctor/login', component: DoctorLogin },
-    { path: '/doctor/reset-password', component: DoctorResetPassword },
+    {path: '/doctor/reset-password',
+      name: 'DoctorResetPassword',
+      component: () => import('@/views/doctor/DoctorResetPassword.vue')},
+    {path: '/doctor/forgot-password', name: 'DoctorForgotPassword',
+      component: () => import('@/views/doctor/DoctorForgotPassword.vue')},
     { path: '/doctor/dashboard', component: DoctorDashboard},
     {path: '/doctor/patients', component: DoctorPatients },
-    {path: '/doctor/patient-detail/:id', name: 'DoctorPatientDetail', component: DoctorPatientDetail, meta:{requiresAuth: true}  },
-    {path: '/doctor/change-password', component: DoctorChangePassword },
+    {path: '/doctor/patient-detail/:id', name: 'DoctorPatientDetail', component: DoctorPatientDetail,
+      meta:{requiresAuth: true}  },
+    { path: '/doctor/change-password', name: 'DoctorChangePassword',
+      component: () => import('@/views/doctor/DoctorChangePassword.vue')},
     {path: '/doctor/bookings', component: DoctorBookings },
     {path: '/doctor/diseases', component: DoctorDiseases },
     {path: '/doctor/medications', component: DoctorMedications },
