@@ -42,14 +42,14 @@
         </thead>
 
         <tbody>
-        <tr v-for="m in medications" :key="m.id">
+        <tr v-for="m in medications" :key="m.medication_id">
 
           <!-- EDIT MODE -->
-          <template v-if="editingId === m.id">
+          <template v-if="editingId === m.medication_id">
             <td><input v-model="editMedication.name" /></td>
             <td><input v-model="editMedication.description" /></td>
             <td>
-              <button @click="updateMedication(m.id)">Save</button>
+              <button @click="updateMedication(m.medication_id)">Save</button>
               <button class="ghost-btn" @click="cancelEdit">Cancel</button>
             </td>
           </template>
@@ -61,7 +61,7 @@
             <td>
               <button @click="startEdit(m)">Edit</button>
               |
-              <button class="danger-btn" @click="deleteMedication(m.id)">Delete</button>
+              <button class="danger-btn" @click="deleteMedication(m.medication_id)">Delete</button>
             </td>
           </template>
 
@@ -141,7 +141,7 @@ function cancelEdit() {
 
 async function updateMedication(id: number) {
   try {
-    await api.put(`/admin/medications/${id}`, editMedication.value)
+    await api.put(`/admin/medications/${Number(id)}`, editMedication.value)
     cancelEdit()
     fetchMedications()
   } catch (e: any) {
@@ -151,7 +151,7 @@ async function updateMedication(id: number) {
 
 async function deleteMedication(id: number) {
   try {
-    await api.delete(`/admin/medications/${id}`)
+    await api.delete(`/admin/medications/${Number(id)}`)
     fetchMedications()
   } catch {
     error.value = 'Could not delete medication.'
