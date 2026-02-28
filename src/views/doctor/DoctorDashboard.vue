@@ -8,6 +8,7 @@
       <router-link to="/doctor/diseases" class="nav-link">Diseases</router-link>
       <router-link to="/doctor/medications" class="nav-link">Medications</router-link>
       <router-link to="/doctor/treatments" class="nav-link">Treatments</router-link>
+      <router-link to="/doctor/change-current-password" class="nav-link">Change Password</router-link>
 
       <button class="logout-btn" @click="logout">Logout</button>
     </nav>
